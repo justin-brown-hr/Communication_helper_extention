@@ -5,6 +5,7 @@ window.addEventListener("message", (event) => {
   const data = event.data;
   if (!data || data.source !== "wa-telegram-bridge") return;
 
+  console.log("[wa-telegram-bridge] relaying to background:", data.title);
   chrome.runtime.sendMessage({
     type: "wa-notification",
     title: data.title,

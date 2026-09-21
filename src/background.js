@@ -61,6 +61,7 @@ async function sendTelegramAlert(text) {
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "wa-notification") {
+    console.log("[wa-telegram-bridge] background received:", message.title);
     const text = `WhatsApp: ${message.title}\n${message.body}`.trim();
     sendTelegramAlert(text);
   } else if (message.type === "test") {

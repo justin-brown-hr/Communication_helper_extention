@@ -10,6 +10,7 @@
 
   function PatchedNotification(title, options) {
     try {
+      console.log("[wa-telegram-bridge] intercepted notification:", title, options);
       window.postMessage(
         {
           source: "wa-telegram-bridge",
@@ -25,7 +26,16 @@
   }
 
   PatchedNotification.prototype = OriginalNotification.prototype;
-  PatchedNotification.permission = OriginalNotification.permission;
+  // A live getter, not a copied string: WhatsApp checks Notification.permission
+  // before deciding whether to fire a notification, and that check needs to
+  // reflect the browser's current permission state, not whatever it was when
+  // this script ran (document_start, likely before permission was granted).
+  Object.defineProperty(PatchedNotification, "permission", {
+    get() {
+      return OriginalNotification.permission;
+    },
+    configurable: true,
+  });
   PatchedNotification.requestPermission =
     OriginalNotification.requestPermission.bind(OriginalNotification);
   PatchedNotification.__waTelegramBridged = true;
