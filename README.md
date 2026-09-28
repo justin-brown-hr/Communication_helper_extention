@@ -7,9 +7,11 @@ notified on your phone through Telegram.
 
 ## How it works
 
-WhatsApp Web, Teams and Telegram Web already trigger a native browser notification (via the
-`Notification` API or a service worker's `showNotification`) whenever a new
-message arrives and the tab isn't focused. This extension intercepts that
+WhatsApp Web, Teams and Telegram Web already trigger a native browser
+notification whenever a new message arrives and the tab isn't focused —
+either directly (`new Notification(...)` / `showNotification`) or by handing
+it to their service worker (Telegram Web A). Teams additionally falls back
+to watching the unread count in the tab title. This extension intercepts that
 call in the page context, relays the title/body to the extension's
 background service worker, and forwards it to a Telegram chat using a
 Telegram bot you control. Alerts are prefixed with `WhatsApp:`, `Teams:` or
@@ -58,6 +60,22 @@ Keep `web.whatsapp.com`, Teams and/or `web.telegram.org` open and logged in
 on your PC. When a new message arrives while the tab is unfocused, you'll get
 a Telegram alert with the sender and message preview. You can turn WhatsApp,
 Teams or Telegram alerts off individually in Settings.
+
+## Troubleshooting
+
+- After updating the extension, click **Reload** on it in
+  `chrome://extensions`, then reload each WhatsApp/Teams/Telegram tab.
+- Alerts only fire while the tab is **not focused**; that's when the apps
+  send notifications.
+- Each site needs browser notification permission (padlock icon → Site
+  settings → Notifications → Allow), and notifications must be on inside the
+  app (Teams: Settings → Notifications; Telegram: Settings → Notifications →
+  Web notifications).
+- Open DevTools on the app's tab and look for `[wa-telegram-bridge]` lines in
+  the console to see what the extension intercepted.
+- If Teams only sends "New activity — N unread" alerts, Teams notified in a
+  way the extension couldn't read, and the unread count in the tab title
+  was used instead.
 
 ## Project structure
 
