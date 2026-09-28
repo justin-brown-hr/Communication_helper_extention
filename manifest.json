@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WhatsApp, Teams & Telegram → Telegram Alert",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Sends you a Telegram message whenever a new WhatsApp Web, Microsoft Teams or Telegram Web notification arrives.",
   "permissions": ["storage"],
   "host_permissions": [
