@@ -3,6 +3,7 @@ const chatIdEl = document.getElementById("chatId");
 const enabledEl = document.getElementById("enabled");
 const whatsappEnabledEl = document.getElementById("whatsappEnabled");
 const teamsEnabledEl = document.getElementById("teamsEnabled");
+const telegramEnabledEl = document.getElementById("telegramEnabled");
 const statusEl = document.getElementById("status");
 
 function showStatus(text) {
@@ -13,19 +14,21 @@ function showStatus(text) {
 }
 
 async function load() {
-  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled } =
+  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled, telegramEnabled } =
     await chrome.storage.sync.get([
       "botToken",
       "chatId",
       "enabled",
       "whatsappEnabled",
       "teamsEnabled",
+      "telegramEnabled",
     ]);
   botTokenEl.value = botToken || "";
   chatIdEl.value = chatId || "";
   enabledEl.checked = enabled !== false;
   whatsappEnabledEl.checked = whatsappEnabled !== false;
   teamsEnabledEl.checked = teamsEnabled !== false;
+  telegramEnabledEl.checked = telegramEnabled !== false;
 }
 
 function save() {
@@ -35,6 +38,7 @@ function save() {
     enabled: enabledEl.checked,
     whatsappEnabled: whatsappEnabledEl.checked,
     teamsEnabled: teamsEnabledEl.checked,
+    telegramEnabled: telegramEnabledEl.checked,
   });
 }
 

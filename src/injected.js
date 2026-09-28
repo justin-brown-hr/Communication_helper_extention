@@ -1,10 +1,15 @@
-// Runs in the page's own JS context (world: "MAIN") on WhatsApp Web and
-// Microsoft Teams (web). Both apps call the native Notification API (or a
-// service worker's showNotification) for every new message when the tab is
-// backgrounded. We intercept those calls so we can forward the alert to our
-// content script without touching the app's DOM.
+// Runs in the page's own JS context (world: "MAIN") on WhatsApp Web,
+// Microsoft Teams (web) and Telegram Web. These apps call the native
+// Notification API (or a service worker's showNotification) for every new
+// message when the tab is backgrounded. We intercept those calls so we can
+// forward the alert to our content script without touching the app's DOM.
 (function () {
-  const app = location.hostname.includes("whatsapp") ? "whatsapp" : "teams";
+  const host = location.hostname;
+  const app = host.includes("whatsapp")
+    ? "whatsapp"
+    : host.includes("telegram")
+      ? "telegram"
+      : "teams";
 
   function relay(title, options) {
     try {

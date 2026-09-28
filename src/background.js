@@ -1,5 +1,9 @@
 const WHATSAPP_ICON_PATH = "icons/whatsapp.png";
+const APP_LABELS = { whatsapp: "WhatsApp", teams: "Teams", telegram: "Telegram" };
 let iconBlobPromise = null;
+// Cached per bot token: the bot's display name, used to ignore Telegram Web
+// notifications for the bot's own chat.
+let botNameCache = { token: null, name: null };
 
 function getIconBlob() {
   if (!iconBlobPromise) {
@@ -11,13 +15,14 @@ function getIconBlob() {
 }
 
 async function getSettings() {
-  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled } =
+  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled, telegramEnabled } =
     await chrome.storage.sync.get([
       "botToken",
       "chatId",
       "enabled",
       "whatsappEnabled",
       "teamsEnabled",
+      "telegramEnabled",
     ]);
   return {
     botToken,
@@ -25,7 +30,31 @@ async function getSettings() {
     enabled: enabled !== false,
     whatsappEnabled: whatsappEnabled !== false,
     teamsEnabled: teamsEnabled !== false,
+    telegramEnabled: telegramEnabled !== false,
   };
+}
+
+async function getBotName(botToken) {
+  if (botNameCache.token === botToken) return botNameCache.name;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+    const data = await res.json();
+    const name = (data.ok && data.result && data.result.first_name) || null;
+    botNameCache = { token: botToken, name };
+    return name;
+  } catch (err) {
+    console.error("Telegram getMe failed:", err);
+    return null;
+  }
+}
+
+// Telegram Web shows a notification when our bot sends you an alert.
+// Forwarding that would send another alert, and so on forever — skip it.
+async function isOwnBotAlert(botToken, title, body) {
+  if (/^(WhatsApp|Teams|Telegram): /.test(body || "")) return true;
+  if (body && body.startsWith("Test message from Communication Helper")) return true;
+  const botName = await getBotName(botToken);
+  return Boolean(botName && title === botName);
 }
 
 async function sendTelegramText(botToken, chatId, text) {
@@ -56,13 +85,17 @@ async function sendTelegramPhoto(botToken, chatId, caption) {
   }
 }
 
-// `app` is "whatsapp", "teams", or undefined (test message).
-async function sendTelegramAlert(text, app) {
-  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled } =
-    await getSettings();
+// `app` is "whatsapp", "teams", "telegram", or undefined (test message).
+async function sendTelegramAlert(app, title, body) {
+  const settings = await getSettings();
+  const { botToken, chatId, enabled } = settings;
   if (!enabled || !botToken || !chatId) return;
-  if (app === "whatsapp" && !whatsappEnabled) return;
-  if (app === "teams" && !teamsEnabled) return;
+  if (app && !settings[`${app}Enabled`]) return;
+  if (app === "telegram" && (await isOwnBotAlert(botToken, title, body))) return;
+
+  const text = app
+    ? `${APP_LABELS[app]}: ${title}\n${body}`.trim()
+    : "Test message from Communication Helper Extension ✅";
 
   // Only WhatsApp alerts carry the WhatsApp icon; everything else is text.
   if (app !== "whatsapp") {
@@ -80,12 +113,10 @@ async function sendTelegramAlert(text, app) {
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "wa-notification") {
-    const app = message.app === "teams" ? "teams" : "whatsapp";
-    const label = app === "teams" ? "Teams" : "WhatsApp";
-    console.log("[wa-telegram-bridge] background received:", label, message.title);
-    const text = `${label}: ${message.title}\n${message.body}`.trim();
-    sendTelegramAlert(text, app);
+    const app = APP_LABELS[message.app] ? message.app : "whatsapp";
+    console.log("[wa-telegram-bridge] background received:", app, message.title);
+    sendTelegramAlert(app, message.title || "", message.body || "");
   } else if (message.type === "test") {
-    sendTelegramAlert("Test message from Communication Helper Extension ✅");
+    sendTelegramAlert();
   }
 });

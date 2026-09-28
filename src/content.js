@@ -1,6 +1,6 @@
 // Bridges window.postMessage events from injected.js (page context)
-// to the extension's background service worker. Runs on WhatsApp Web and
-// Microsoft Teams (web).
+// to the extension's background service worker. Runs on WhatsApp Web,
+// Microsoft Teams (web) and Telegram Web.
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   const data = event.data;
