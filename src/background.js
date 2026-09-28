@@ -1,22 +1,31 @@
-const ICON_PATH = "icons/whatsapp.png";
+const WHATSAPP_ICON_PATH = "icons/whatsapp.png";
 let iconBlobPromise = null;
 
 function getIconBlob() {
   if (!iconBlobPromise) {
-    iconBlobPromise = fetch(chrome.runtime.getURL(ICON_PATH)).then((res) =>
-      res.blob()
+    iconBlobPromise = fetch(chrome.runtime.getURL(WHATSAPP_ICON_PATH)).then(
+      (res) => res.blob()
     );
   }
   return iconBlobPromise;
 }
 
 async function getSettings() {
-  const { botToken, chatId, enabled } = await chrome.storage.sync.get([
-    "botToken",
-    "chatId",
-    "enabled",
-  ]);
-  return { botToken, chatId, enabled: enabled !== false };
+  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled } =
+    await chrome.storage.sync.get([
+      "botToken",
+      "chatId",
+      "enabled",
+      "whatsappEnabled",
+      "teamsEnabled",
+    ]);
+  return {
+    botToken,
+    chatId,
+    enabled: enabled !== false,
+    whatsappEnabled: whatsappEnabled !== false,
+    teamsEnabled: teamsEnabled !== false,
+  };
 }
 
 async function sendTelegramText(botToken, chatId, text) {
@@ -47,9 +56,19 @@ async function sendTelegramPhoto(botToken, chatId, caption) {
   }
 }
 
-async function sendTelegramAlert(text) {
-  const { botToken, chatId, enabled } = await getSettings();
+// `app` is "whatsapp", "teams", or undefined (test message).
+async function sendTelegramAlert(text, app) {
+  const { botToken, chatId, enabled, whatsappEnabled, teamsEnabled } =
+    await getSettings();
   if (!enabled || !botToken || !chatId) return;
+  if (app === "whatsapp" && !whatsappEnabled) return;
+  if (app === "teams" && !teamsEnabled) return;
+
+  // Only WhatsApp alerts carry the WhatsApp icon; everything else is text.
+  if (app !== "whatsapp") {
+    await sendTelegramText(botToken, chatId, text);
+    return;
+  }
 
   try {
     await sendTelegramPhoto(botToken, chatId, text);
@@ -61,9 +80,11 @@ async function sendTelegramAlert(text) {
 
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === "wa-notification") {
-    console.log("[wa-telegram-bridge] background received:", message.title);
-    const text = `WhatsApp: ${message.title}\n${message.body}`.trim();
-    sendTelegramAlert(text);
+    const app = message.app === "teams" ? "teams" : "whatsapp";
+    const label = app === "teams" ? "Teams" : "WhatsApp";
+    console.log("[wa-telegram-bridge] background received:", label, message.title);
+    const text = `${label}: ${message.title}\n${message.body}`.trim();
+    sendTelegramAlert(text, app);
   } else if (message.type === "test") {
     sendTelegramAlert("Test message from Communication Helper Extension ✅");
   }

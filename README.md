@@ -1,16 +1,24 @@
 # Communication_helper_extention
 
-A Chrome/Edge browser extension that watches **WhatsApp Web** and forwards new
-message alerts to **Telegram**, so you can keep WhatsApp open on your PC and
-still get notified on your phone through Telegram.
+A Chrome/Edge browser extension that watches **WhatsApp Web** and
+**Microsoft Teams (web)** and forwards new message alerts to **Telegram**, so
+you can keep them open on your PC and still get notified on your phone
+through Telegram.
 
 ## How it works
 
-WhatsApp Web already triggers a native browser notification (via the
-`Notification` API) whenever a new message arrives and the tab isn't
-focused. This extension intercepts that call in the page context, relays the
-title/body to the extension's background service worker, and forwards it to
-a Telegram chat using a Telegram bot you control.
+WhatsApp Web and Teams already trigger a native browser notification (via the
+`Notification` API or a service worker's `showNotification`) whenever a new
+message arrives and the tab isn't focused. This extension intercepts that
+call in the page context, relays the title/body to the extension's
+background service worker, and forwards it to a Telegram chat using a
+Telegram bot you control. Alerts are prefixed with `WhatsApp:` or `Teams:`.
+
+Supported Teams URLs: `teams.microsoft.com`, `teams.live.com`, and
+`teams.cloud.microsoft`. In Teams, make sure desktop notifications are
+turned on (Settings → Notifications) and the browser has granted
+notification permission — otherwise Teams never fires a notification to
+intercept. The Teams desktop app is not supported; use Teams in the browser.
 
 ## Setup
 
@@ -38,15 +46,16 @@ a Telegram chat using a Telegram bot you control.
 
 ### 4. Use it
 
-Keep `web.whatsapp.com` open and logged in on your PC. When a new WhatsApp
-message arrives while the tab is unfocused, you'll get a Telegram alert with
-the sender and message preview.
+Keep `web.whatsapp.com` and/or Teams open and logged in on your PC. When a
+new message arrives while the tab is unfocused, you'll get a Telegram alert
+with the sender and message preview. You can turn WhatsApp or Teams alerts
+off individually in Settings.
 
 ## Project structure
 
 ```
 manifest.json       Extension manifest (MV3)
-src/injected.js      Intercepts WhatsApp Web's Notification calls (page context)
+src/injected.js      Intercepts WhatsApp/Teams Notification calls (page context)
 src/content.js       Relays intercepted notifications to the background worker
 src/background.js    Sends alerts to Telegram via the Bot API
 src/options.html/js  Settings page (bot token, chat id, enable/disable)

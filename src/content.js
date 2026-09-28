@@ -1,5 +1,6 @@
 // Bridges window.postMessage events from injected.js (page context)
-// to the extension's background service worker.
+// to the extension's background service worker. Runs on WhatsApp Web and
+// Microsoft Teams (web).
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   const data = event.data;
@@ -20,6 +21,7 @@ window.addEventListener("message", (event) => {
   try {
     chrome.runtime.sendMessage({
       type: "wa-notification",
+      app: data.app,
       title: data.title,
       body: data.body,
     });
