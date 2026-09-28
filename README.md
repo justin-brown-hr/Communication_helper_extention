@@ -14,8 +14,16 @@ it to their service worker (Telegram Web A). Teams additionally falls back
 to watching the unread count in the tab title. This extension intercepts that
 call in the page context, relays the title/body to the extension's
 background service worker, and forwards it to a Telegram chat using a
-Telegram bot you control. Alerts are prefixed with `WhatsApp:`, `Teams:` or
-`Telegram:`.
+Telegram bot you control. Each alert looks like this:
+
+```
+🟢 WhatsApp          🟣 Teams             🔵 Telegram
+Alice                Bob                  Dave
+See you at 6?        Meeting moved to 3   Sent the file
+```
+
+(Telegram bots can't put a small image inline in a text message, so each
+app is marked with a coloured emoji and its name in bold.)
 
 Supported Teams URLs: `teams.microsoft.com`, `teams.live.com`, and
 `teams.cloud.microsoft`. In Teams, make sure desktop notifications are
@@ -86,4 +94,5 @@ src/content.js       Relays intercepted notifications to the background worker
 src/background.js    Sends alerts to Telegram via the Bot API
 src/options.html/js  Settings page (bot token, chat id, enable/disable)
 src/popup.html/js    Toolbar popup showing current status
+icons/               WhatsApp, Teams and Telegram icons
 ```
