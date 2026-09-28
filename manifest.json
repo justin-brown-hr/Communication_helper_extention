@@ -1,22 +1,41 @@
 {
   "manifest_version": 3,
-  "name": "WhatsApp → Telegram Alert",
-  "version": "1.0.0",
-  "description": "Sends you a Telegram message whenever a new WhatsApp Web notification arrives.",
+  "name": "WhatsApp, Teams & Telegram → Telegram Alert",
+  "version": "1.2.0",
+  "description": "Sends you a Telegram message whenever a new WhatsApp Web, Microsoft Teams or Telegram Web notification arrives.",
   "permissions": ["storage"],
-  "host_permissions": ["https://web.whatsapp.com/*", "https://api.telegram.org/*"],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "https://teams.microsoft.com/*",
+    "https://teams.live.com/*",
+    "https://teams.cloud.microsoft/*",
+    "https://web.telegram.org/*",
+    "https://api.telegram.org/*"
+  ],
   "background": {
     "service_worker": "src/background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://web.whatsapp.com/*"],
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*",
+        "https://teams.cloud.microsoft/*",
+        "https://web.telegram.org/*"
+      ],
       "js": ["src/injected.js"],
       "world": "MAIN",
       "run_at": "document_start"
     },
     {
-      "matches": ["https://web.whatsapp.com/*"],
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*",
+        "https://teams.cloud.microsoft/*",
+        "https://web.telegram.org/*"
+      ],
       "js": ["src/content.js"],
       "run_at": "document_start"
     }
